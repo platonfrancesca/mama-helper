@@ -1,0 +1,38 @@
+### Create reminder
+POST http://localhost:8080/api/reminders
+Content-Type: application/json
+
+{
+  "title": "Bath time",
+  "description": "Give baby a bath",
+  "time": "2026-09-29T19:00:00"
+}
+
+### Test invalid reminder
+POST http://localhost:8080/api/reminders
+Content-Type: application/json
+
+{
+  "title": "",
+  "description": "This reminder should not be created",
+  "time": "2026-09-29T19:00:00"
+}
+
+### Get all reminders
+GET http://localhost:8080/api/reminders
+
+### Get reminder by ID
+GET http://localhost:8080/api/reminders/1
+
+### Update a reminder by ID
+PUT http://localhost:8080/api/reminders/1
+Content-Type: application/json
+
+{
+  "title": "Bath time",
+  "description": "Give baby a bath + pyjamas",
+  "time": "2026-10-14T19:30:00"
+}
+
+### Delete reminder by ID
+DELETE http://localhost:8080/api/reminders/1
