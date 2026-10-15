@@ -8,6 +8,26 @@ Content-Type: application/json
   "time": "2026-09-29T19:00:00"
 }
 
+### Create child
+POST http://localhost:8080/api/child
+Content-Type: application/json
+
+{
+  "name": "Maria",
+  "dateOfBirth": "2026-01-01"
+}
+
+### Create reminder for a child
+POST http://localhost:8080/api/reminders
+Content-Type: application/json
+
+{
+  "title": "Bath time",
+  "description": "Give baby a bath",
+  "time": "2026-09-29T19:00:00",
+  "childId": 1
+}
+
 ### Test invalid reminder
 POST http://localhost:8080/api/reminders
 Content-Type: application/json

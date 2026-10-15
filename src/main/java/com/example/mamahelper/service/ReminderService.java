@@ -1,6 +1,8 @@
 package com.example.mamahelper.service;
 
+import com.example.mamahelper.entity.Child;
 import com.example.mamahelper.entity.Reminder;
+import com.example.mamahelper.repository.ChildRepository;
 import com.example.mamahelper.repository.ReminderRepository;
 import org.springframework.stereotype.Service;
 
@@ -11,12 +13,19 @@ import java.util.Optional;
 public class ReminderService {
 
     private final ReminderRepository reminderRepository;
+    private final ChildRepository childRepository;
 
-    public ReminderService(ReminderRepository reminderRepository) {
+    public ReminderService(ReminderRepository reminderRepository,
+                           ChildRepository childRepository) {
         this.reminderRepository = reminderRepository;
+        this.childRepository = childRepository;
     }
 
-    public Reminder createReminder(Reminder reminder) {
+    public Reminder createReminder(Reminder reminder, Long childId) {
+        Child child = childRepository.findById(childId)
+                .orElseThrow(() -> new RuntimeException("Child not found"));
+        reminder.setChild(child);
+
         return reminderRepository.save(reminder);
     }
 
