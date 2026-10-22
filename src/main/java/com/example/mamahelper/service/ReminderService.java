@@ -44,6 +44,10 @@ public class ReminderService {
                     reminder.setDescription(updatedReminder.getDescription());
                     reminder.setTime(updatedReminder.getTime());
 
+                    if (!reminder.getTime().equals(updatedReminder.getTime())) {
+                        reminder.setNotificationSent(false);
+                    }
+
                     return reminderRepository.save(reminder);
                 });
     }

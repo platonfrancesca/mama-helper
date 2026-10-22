@@ -30,7 +30,17 @@ public class Reminder {
     @NotNull
     private LocalDateTime time;
 
+    private boolean notificationSent = false;
+
     @ManyToOne
     @JoinColumn(name = "child_id", nullable = false)
     private Child child;
+
+    public boolean isNotificationSent() {
+        return notificationSent;
+    }
+
+    public void setNotificationSent(boolean notificationSent) {
+        this.notificationSent = notificationSent;
+    }
 }
