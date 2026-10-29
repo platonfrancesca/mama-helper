@@ -42,12 +42,12 @@ public class ReminderService {
                 .map(reminder -> {
                     reminder.setTitle(updatedReminder.getTitle());
                     reminder.setDescription(updatedReminder.getDescription());
-                    reminder.setTime(updatedReminder.getTime());
 
                     if (!reminder.getTime().equals(updatedReminder.getTime())) {
                         reminder.setNotificationSent(false);
                     }
 
+                    reminder.setTime(updatedReminder.getTime());
                     return reminderRepository.save(reminder);
                 });
     }

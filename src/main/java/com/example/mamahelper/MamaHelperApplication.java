@@ -2,6 +2,7 @@ package com.example.mamahelper;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableScheduling
@@ -12,4 +13,8 @@ public class MamaHelperApplication {
         SpringApplication.run(MamaHelperApplication.class, args);
     }
 
+    @Bean
+    public java.time.Clock clock() {
+        return java.time.Clock.systemDefaultZone();
+    }
 }
