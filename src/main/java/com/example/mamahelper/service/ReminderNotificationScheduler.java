@@ -16,11 +16,14 @@ public class ReminderNotificationScheduler {
 
     private final ReminderRepository reminderRepository;
     private final Clock clock;
+    private final NotificationService notificationService;
 
     public ReminderNotificationScheduler(ReminderRepository reminderRepository,
-                                         Clock clock) {
+                                         Clock clock,
+                                         NotificationService notificationService) {
         this.reminderRepository = reminderRepository;
         this.clock = clock;
+        this.notificationService = notificationService;
     }
 
     @Scheduled(fixedRate = 60000)
@@ -44,6 +47,7 @@ public class ReminderNotificationScheduler {
         reminder.setNotificationSent(true);
         reminderRepository.save(reminder);
 
-        System.out.println("NOTIFICATION: " + reminder.getTitle() + " is coming up in " + MINUTES + " minutes");
+        notificationService.createNotification(reminder);
+//        System.out.println("NOTIFICATION: " + reminder.getTitle() + " is coming up in " + MINUTES + " minutes");
     }
 }
