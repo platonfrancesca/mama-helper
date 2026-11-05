@@ -31,8 +31,6 @@ public class ChildController {
     @PutMapping("/{childId}")
     public ResponseEntity<Child> updateReminder(@PathVariable Long childId,
                                                 @Valid @RequestBody Child updatedChildInfo) {
-        return childService.updateChildInfo(childId, updatedChildInfo)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(childService.updateChildInfo(childId, updatedChildInfo));
     }
 }

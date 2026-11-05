@@ -1,5 +1,6 @@
 package com.example.mamahelper.service;
 
+import com.example.mamahelper.controller.exceptions.ResourceNotFoundException;
 import com.example.mamahelper.entity.Child;
 import com.example.mamahelper.entity.Reminder;
 import com.example.mamahelper.repository.ChildRepository;
@@ -7,7 +8,6 @@ import com.example.mamahelper.repository.ReminderRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ReminderService {
@@ -23,7 +23,7 @@ public class ReminderService {
 
     public Reminder createReminder(Reminder reminder, Long childId) {
         Child child = childRepository.findById(childId)
-                .orElseThrow(() -> new RuntimeException("Child not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Child not found with id: " + childId));
         reminder.setChild(child);
 
         return reminderRepository.save(reminder);
@@ -33,11 +33,12 @@ public class ReminderService {
         return reminderRepository.findAll();
     }
 
-    public Optional<Reminder> getReminderById(Long id) {
-        return reminderRepository.findById(id);
+    public Reminder getReminderById(Long id) {
+        return reminderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Reminder not found with id: " + id));
     }
 
-    public Optional<Reminder> updateReminder(Long id, Reminder updatedReminder) {
+    public Reminder updateReminder(Long id, Reminder updatedReminder) {
         return reminderRepository.findById(id)
                 .map(reminder -> {
                     reminder.setTitle(updatedReminder.getTitle());
@@ -49,7 +50,8 @@ public class ReminderService {
 
                     reminder.setTime(updatedReminder.getTime());
                     return reminderRepository.save(reminder);
-                });
+                })
+                .orElseThrow(() -> new ResourceNotFoundException("Reminder not found with id: " + id));
     }
 
     public boolean deleteReminder(Long id) {

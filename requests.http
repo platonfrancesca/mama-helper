@@ -24,7 +24,7 @@ Content-Type: application/json
 {
   "title": "Bath time",
   "description": "Give baby a bath",
-  "time": "2026-10-22T15:15:00",
+  "time": "2026-11-05T15:10:00",
   "childId": 1
 }
 
@@ -56,3 +56,15 @@ Content-Type: application/json
 
 ### Delete reminder by ID
 DELETE http://localhost:8080/api/reminders/1
+
+### Get all notifications
+GET http://localhost:8080/api/notifications
+
+### Get notification by ID
+GET http://localhost:8080/api/notifications/1
+
+### Mark notification as read
+PATCH http://localhost:8080/api/notifications/1/read
+
+### Delete notification by ID
+DELETE http://localhost:8080/api/notifications/1

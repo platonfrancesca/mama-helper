@@ -78,13 +78,17 @@ class ReminderServiceTest {
     }
 
     @Test
-    void shouldReturnEmptyWhenReminderDoesNotExistById() {
-        when(reminderRepository.findById(1L))
+    void shouldThrowExceptionWhenReminderDoesNotExistById() {
+        var reminderId = 1L;
+        when(reminderRepository.findById(reminderId))
                 .thenReturn(Optional.empty());
 
-        Optional<Reminder> result = reminderService.updateReminder(1L, new Reminder());
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> reminderService.updateReminder(reminderId, any(Reminder.class)));
 
-        assertTrue(result.isEmpty());
+        assertEquals("Reminder not found with id: " + reminderId, exception.getMessage());
+
+        verify(reminderRepository, times(1)).findById(reminderId);
         verify(reminderRepository, never()).save(any(Reminder.class));
     }
 

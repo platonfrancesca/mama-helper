@@ -23,13 +23,14 @@ public class ChildService {
         return childRepository.findById(id);
     }
 
-    public Optional<Child> updateChildInfo(Long id, Child updatedChildInfo) {
+    public Child updateChildInfo(Long id, Child updatedChildInfo) {
         return childRepository.findById(id)
                 .map(child -> {
                     child.setName(updatedChildInfo.getName());
                     child.setDateOfBirth(updatedChildInfo.getDateOfBirth());
 
                     return childRepository.save(child);
-                });
+                })
+                .orElseThrow(() -> new RuntimeException("Child not found with id: " + id));
     }
 }

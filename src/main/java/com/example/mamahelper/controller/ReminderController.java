@@ -37,17 +37,13 @@ public class ReminderController {
 
     @GetMapping("/{reminderId}")
     public ResponseEntity<Reminder> getReminderById(@PathVariable Long reminderId) {
-        return reminderService.getReminderById(reminderId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(reminderService.getReminderById(reminderId));
     }
 
     @PutMapping("/{reminderId}")
     public ResponseEntity<Reminder> updateReminder(@PathVariable Long reminderId,
                                                    @Valid @RequestBody Reminder updatedReminder) {
-        return reminderService.updateReminder(reminderId, updatedReminder)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(reminderService.updateReminder(reminderId, updatedReminder));
     }
 
     @DeleteMapping("/{reminderId}")

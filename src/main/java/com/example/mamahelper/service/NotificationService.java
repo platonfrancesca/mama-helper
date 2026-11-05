@@ -1,5 +1,6 @@
 package com.example.mamahelper.service;
 
+import com.example.mamahelper.controller.exceptions.ResourceNotFoundException;
 import com.example.mamahelper.entity.Notification;
 import com.example.mamahelper.entity.Reminder;
 import com.example.mamahelper.repository.NotificationRepository;
@@ -28,12 +29,24 @@ public class NotificationService {
         return notificationRepository.findAll();
     }
 
+    public Notification getById(Long id) {
+        return notificationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Notification not found with id " + id));
+    }
+
     public Notification markAsRead(Long id) {
         return notificationRepository.findById(id)
                 .map(notification -> {
                     notification.setRead(true);
                     return notificationRepository.save(notification);
                 })
-                .orElseThrow(() -> new RuntimeException("Notification not found with id " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Notification not found with id " + id));
+    }
+
+    public void deleteNotificationById(Long id) {
+        Notification notification = notificationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Notification not found with id " + id));
+
+        notificationRepository.delete(notification);
     }
 }

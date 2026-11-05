@@ -1,5 +1,6 @@
 package com.example.mamahelper.service;
 
+import com.example.mamahelper.controller.exceptions.ResourceNotFoundException;
 import com.example.mamahelper.entity.Notification;
 import com.example.mamahelper.entity.Reminder;
 import com.example.mamahelper.repository.NotificationRepository;
@@ -69,6 +70,36 @@ class NotificationServiceTest {
     }
 
     @Test
+    void shouldReturnNotificationById() {
+        Notification notification = new Notification();
+        var testId = 1L;
+        notification.setId(testId);
+
+        when(notificationRepository.findById(testId))
+                .thenReturn(Optional.of(notification));
+
+        Notification result = notificationService.getById(testId);
+
+        assertNotNull(result);
+        assertEquals(testId, result.getId());
+
+        verify(notificationRepository).findById(testId);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenNotificationNotFoundById() {
+        Long testId = 999L;
+
+        when(notificationRepository.findById(testId))
+                .thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> notificationService.getById(testId));
+
+        verify(notificationRepository).findById(testId);
+    }
+
+    @Test
     void shouldMarkNotificationAsRead() {
         Notification notification = new Notification();
         notification.setMessage("Bath Time");
@@ -103,5 +134,20 @@ class NotificationServiceTest {
 
         verify(notificationRepository, times(1)).findById(notificationId);
         verify(notificationRepository, never()).save(any(Notification.class));
+    }
+
+    @Test
+    void shouldDeleteNotificationById() {
+        Long notificationId = 1L;
+        Notification notification = new Notification();
+        notification.setId(notificationId);
+
+        when(notificationRepository.findById(notificationId))
+                .thenReturn(Optional.of(notification));
+
+        notificationService.deleteNotificationById(notificationId);
+
+        verify(notificationRepository).findById(notificationId);
+        verify(notificationRepository).delete(notification);
     }
 }
