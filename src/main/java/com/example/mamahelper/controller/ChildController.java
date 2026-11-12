@@ -6,6 +6,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/child")
 public class ChildController {
@@ -19,6 +21,11 @@ public class ChildController {
     @PostMapping
     public Child createChild(@Valid @RequestBody Child child) {
         return childService.createChild(child);
+    }
+
+    @GetMapping
+    public List<Child> getAllChildren() {
+        return childService.getAllChildren();
     }
 
     @GetMapping("/{childId}")

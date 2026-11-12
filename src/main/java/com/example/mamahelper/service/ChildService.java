@@ -4,6 +4,7 @@ import com.example.mamahelper.entity.Child;
 import com.example.mamahelper.repository.ChildRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -17,6 +18,10 @@ public class ChildService {
 
     public Child createChild(Child child) {
         return childRepository.save(child);
+    }
+
+    public List<Child> getAllChildren() {
+        return childRepository.findAll();
     }
 
     public Optional<Child> getChildById(Long id) {
