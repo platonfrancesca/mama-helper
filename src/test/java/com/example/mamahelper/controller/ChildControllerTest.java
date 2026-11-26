@@ -20,9 +20,6 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/**
- * Slice test for ChildController: web layer only, ChildService is mocked.
- */
 @WebMvcTest(ChildController.class)
 class ChildControllerTest {
 

@@ -19,10 +19,6 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/**
- * Slice test: only the web layer is loaded (controller, GlobalExceptionHandler, JSON, validation).
- * ReminderService is replaced by a Mockito mock, so no database is involved.
- */
 @WebMvcTest(ReminderController.class)
 class ReminderControllerTest {
 
