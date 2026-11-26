@@ -47,6 +47,16 @@ Content-Type: application/json
   "time": "2026-09-29T19:00:00"
 }
 
+### Test reminder with invalid time format (expect 400)
+POST http://localhost:8080/api/reminders
+Content-Type: application/json
+
+{
+  "title": "Bath time",
+  "time": "tomorrow",
+  "childId": 1
+}
+
 ### Get all reminders
 GET http://localhost:8080/api/reminders
 

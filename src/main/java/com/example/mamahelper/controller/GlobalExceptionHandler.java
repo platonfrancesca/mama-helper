@@ -2,6 +2,7 @@ package com.example.mamahelper.controller;
 
 import com.example.mamahelper.controller.exceptions.ResourceNotFoundException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -19,6 +20,13 @@ public class GlobalExceptionHandler {
                 errors.put(error.getField(), error.getDefaultMessage()));
 
         return ResponseEntity.badRequest().body(errors);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, String>> handleUnreadableBody(HttpMessageNotReadableException ex) {
+        return ResponseEntity.badRequest()
+                .body(Map.of("error",
+                        "Request body is invalid. Check the JSON format and field types (dates as yyyy-MM-dd, date-times as yyyy-MM-ddTHH:mm:ss)."));
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
