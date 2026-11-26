@@ -4,8 +4,6 @@ import com.example.mamahelper.entity.Reminder;
 import com.example.mamahelper.repository.ReminderRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -14,38 +12,47 @@ import java.time.ZoneId;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+/**
+ * Which reminders are due is decided by the database query (see ReminderRepositoryTest).
+ * These tests check what the scheduler does with the reminders the query returns.
+ */
 class ReminderNotificationSchedulerTest {
 
-    @Mock
     private ReminderRepository reminderRepository;
-
-    @Mock
     private NotificationService notificationService;
-
-    @Mock
     private Clock clock;
+    private LocalDateTime now;
 
-    @InjectMocks
     private ReminderNotificationScheduler reminderNotificationScheduler;
 
     @BeforeEach
     void setUp() {
         reminderRepository = mock(ReminderRepository.class);
         notificationService = mock(NotificationService.class);
-        clock = getFixedClock(ZoneId.systemDefault(), Instant.parse("2026-10-29T10:00:00Z"));
+        clock = Clock.fixed(Instant.parse("2026-10-29T10:00:00Z"), ZoneId.systemDefault());
+        now = LocalDateTime.now(clock);
 
         reminderNotificationScheduler = new ReminderNotificationScheduler(reminderRepository, clock, notificationService);
     }
 
     @Test
-    void shouldSendNotificationWhenReminderIsTenMinutesAway() {
-        Reminder reminder = new Reminder();
-        reminder.setTitle("Bath Time");
-        reminder.setTime(LocalDateTime.now(clock).plusMinutes(10));
+    void shouldQueryRemindersDueWithinTheNextTenMinutes() {
+        when(reminderRepository.findByNotificationSentFalseAndTimeAfterAndTimeLessThanEqual(any(), any()))
+                .thenReturn(List.of());
 
-        when(reminderRepository.findAll()).thenReturn(List.of(reminder));
+        reminderNotificationScheduler.checkReminders();
+
+        verify(reminderRepository).findByNotificationSentFalseAndTimeAfterAndTimeLessThanEqual(now, now.plusMinutes(10));
+        verify(reminderRepository, never()).findAll();
+    }
+
+    @Test
+    void shouldMarkDueReminderAsSentAndSaveIt() {
+        Reminder reminder = reminder(1L, "Bath Time", now.plusMinutes(10));
+        whenDueRemindersAre(List.of(reminder));
 
         reminderNotificationScheduler.checkReminders();
 
@@ -54,153 +61,62 @@ class ReminderNotificationSchedulerTest {
     }
 
     @Test
-    void shouldNotSendNotificationWhenReminderIsMoreThanTenMinutesAway() {
-        Reminder reminder = new Reminder();
-        reminder.setTitle("Bath Time");
-        reminder.setTime(LocalDateTime.now(clock).plusMinutes(15));
-
-        when(reminderRepository.findAll()).thenReturn(List.of(reminder));
+    void shouldCreateNotificationForDueReminder() {
+        Reminder reminder = reminder(1L, "Doctor Appointment", now.plusMinutes(5));
+        whenDueRemindersAre(List.of(reminder));
 
         reminderNotificationScheduler.checkReminders();
 
-        assertFalse(reminder.isNotificationSent());
-        verify(reminderRepository, never()).save(reminder);
-    }
-
-    @Test
-    void shouldNotSendNotificationTwiceForTheSameReminder() {
-        Reminder reminder = new Reminder();
-        reminder.setTitle("Bath Time");
-        reminder.setTime(LocalDateTime.now(clock).plusMinutes(10));
-
-        when(reminderRepository.findAll()).thenReturn(List.of(reminder));
-
-        reminderNotificationScheduler.checkReminders();
-        reminderNotificationScheduler.checkReminders();
-
-        assertTrue(reminder.isNotificationSent());
-        verify(reminderRepository, times(1)).save(reminder);
-    }
-
-    @Test
-    void shouldNotSendNotificationWhenReminderTimeAlreadyPassed() {
-        ZoneId zoneId = ZoneId.systemDefault();
-        Instant fixedInstant = Instant.parse("2026-10-29T10:01:00Z");
-        Clock fixedClock = getFixedClock(zoneId, fixedInstant);
-
-        Reminder reminder = new Reminder();
-        reminder.setTitle("Bath Time");
-        reminder.setTime(LocalDateTime.now(fixedClock).minusMinutes(1));
-
-        when(reminderRepository.findAll()).thenReturn(List.of(reminder));
-
-        reminderNotificationScheduler.checkReminders();
-
-        assertFalse(reminder.isNotificationSent());
-        verify(reminderRepository, never()).save(reminder);
-    }
-
-    @Test
-    void shouldNotSendNotificationWhenReminderWasAlreadyNotified() {
-        ZoneId zoneId = ZoneId.systemDefault();
-        Instant fixedInstant = Instant.parse("2026-10-29T10:00:00Z");
-        Clock fixedClock = getFixedClock(zoneId, fixedInstant);
-
-        Reminder reminder = new Reminder();
-        reminder.setTitle("Bath Time");
-        reminder.setTime(LocalDateTime.now(fixedClock).plusMinutes(10));
-        reminder.setNotificationSent(true);
-
-        when(reminderRepository.findAll()).thenReturn(List.of(reminder));
-
-        reminderNotificationScheduler.checkReminders();
-
-        assertTrue(reminder.isNotificationSent());
-        verify(reminderRepository, never()).save(reminder);
-    }
-
-    @Test
-    void shouldSendNotificationWhenUpdatedReminderIsDue() {
-        Reminder reminder = new Reminder();
-        reminder.setTitle("Bath Time");
-        reminder.setTime(LocalDateTime.now(clock).plusMinutes(30));
-        reminder.setNotificationSent(false);
-
-        reminder.setTime(LocalDateTime.now(clock).plusMinutes(10));
-
-        when(reminderRepository.findAll()).thenReturn(List.of(reminder));
-
-        reminderNotificationScheduler.checkReminders();
-        reminderNotificationScheduler.checkReminders();
-
-        assertTrue(reminder.isNotificationSent());
-        verify(reminderRepository, times(1)).save(reminder);
-    }
-
-    @Test
-    void shouldSendNotificationWhenReminderIsDue() {
-        Reminder reminder = new Reminder();
-        reminder.setId(1L);
-        reminder.setTitle("Doctor Appointment");
-        reminder.setTime(LocalDateTime.now(clock).plusMinutes(10));
-        reminder.setNotificationSent(false);
-
-        when(reminderRepository.findAll()).thenReturn(List.of(reminder));
-
-        reminderNotificationScheduler.checkReminders();
-
-        assertTrue(reminder.isNotificationSent());
         verify(notificationService).createNotification(reminder);
     }
 
     @Test
-    void shouldNotCreateDuplicatedNotification() {
-        Reminder reminder = new Reminder();
-        reminder.setId(1L);
-        reminder.setTitle("Doctor Appointment");
-        reminder.setTime(LocalDateTime.now(clock).plusMinutes(10));
-        reminder.setNotificationSent(true);
-
-        when(reminderRepository.findAll()).thenReturn(List.of(reminder));
+    void shouldNotifyEveryDueReminder() {
+        Reminder bath = reminder(1L, "Bath Time", now.plusMinutes(3));
+        Reminder vitamins = reminder(2L, "Vitamins", now.plusMinutes(8));
+        whenDueRemindersAre(List.of(bath, vitamins));
 
         reminderNotificationScheduler.checkReminders();
 
-        assertTrue(reminder.isNotificationSent());
-        verify(notificationService, never()).createNotification(reminder);
+        verify(notificationService).createNotification(bath);
+        verify(notificationService).createNotification(vitamins);
     }
 
     @Test
-    void shouldNotSendNotificationWhenReminderIsDueButNotificationAlreadySent() {
-        Reminder reminder = new Reminder();
-        reminder.setId(1L);
-        reminder.setTitle("Doctor Appointment");
-        reminder.setTime(LocalDateTime.now(clock).plusMinutes(10));
-        reminder.setNotificationSent(true);
-
-        when(reminderRepository.findAll()).thenReturn(List.of(reminder));
+    void shouldDoNothingWhenNoRemindersAreDue() {
+        whenDueRemindersAre(List.of());
 
         reminderNotificationScheduler.checkReminders();
 
-        assertTrue(reminder.isNotificationSent());
-        verify(notificationService, never()).createNotification(reminder);
+        verify(reminderRepository, never()).save(any());
+        verify(notificationService, never()).createNotification(any());
     }
 
     @Test
-    void shouldNotCreateNotificationWhenReminderIsNotDue() {
-        Reminder reminder = new Reminder();
-        reminder.setId(1L);
-        reminder.setTitle("Doctor Appointment");
-        reminder.setTime(LocalDateTime.now(clock).plusHours(2));
-        reminder.setNotificationSent(false);
-
-        when(reminderRepository.findAll()).thenReturn(List.of(reminder));
+    void shouldNotSendNotificationTwiceForTheSameReminder() {
+        Reminder reminder = reminder(1L, "Bath Time", now.plusMinutes(10));
+        // First run: the reminder is due. Second run: the database no longer returns it (notificationSent = true)
+        when(reminderRepository.findByNotificationSentFalseAndTimeAfterAndTimeLessThanEqual(any(), any()))
+                .thenReturn(List.of(reminder))
+                .thenReturn(List.of());
 
         reminderNotificationScheduler.checkReminders();
+        reminderNotificationScheduler.checkReminders();
 
-        verify(notificationService, never()).createNotification(reminder);
+        verify(reminderRepository, times(1)).save(reminder);
+        verify(notificationService, times(1)).createNotification(reminder);
     }
 
-    private Clock getFixedClock(ZoneId zoneId, Instant fixedInstant) {
-        return Clock.fixed(fixedInstant, zoneId);
+    private void whenDueRemindersAre(List<Reminder> reminders) {
+        when(reminderRepository.findByNotificationSentFalseAndTimeAfterAndTimeLessThanEqual(any(), any()))
+                .thenReturn(reminders);
+    }
+
+    private Reminder reminder(Long id, String title, LocalDateTime time) {
+        Reminder reminder = new Reminder();
+        reminder.setId(id);
+        reminder.setTitle(title);
+        reminder.setTime(time);
+        return reminder;
     }
 }

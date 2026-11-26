@@ -30,16 +30,12 @@ public class ReminderNotificationScheduler {
     public void checkReminders() {
         LocalDateTime now = LocalDateTime.now(clock);
 
-        List<Reminder> reminders = reminderRepository.findAll();
-        for (Reminder reminder : reminders) {
-            LocalDateTime reminderTime = reminder.getTime();
+        // The database returns only reminders that are not notified yet and due in the next MINUTES
+        List<Reminder> dueReminders = reminderRepository
+                .findByNotificationSentFalseAndTimeAfterAndTimeLessThanEqual(now, now.plusMinutes(MINUTES));
 
-            if (reminderTime != null && !reminder.isNotificationSent()) {
-                LocalDateTime notificationTime = reminderTime.minusMinutes(MINUTES);
-
-                if (reminderTime.isAfter(now) && !notificationTime.isAfter(now))
-                    sendNotification(reminder);
-            }
+        for (Reminder reminder : dueReminders) {
+            sendNotification(reminder);
         }
     }
 
@@ -48,6 +44,5 @@ public class ReminderNotificationScheduler {
         reminderRepository.save(reminder);
 
         notificationService.createNotification(reminder);
-//        System.out.println("NOTIFICATION: " + reminder.getTitle() + " is coming up in " + MINUTES + " minutes");
     }
 }
