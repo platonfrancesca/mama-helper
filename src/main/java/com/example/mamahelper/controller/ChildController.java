@@ -1,6 +1,7 @@
 package com.example.mamahelper.controller;
 
-import com.example.mamahelper.entity.Child;
+import com.example.mamahelper.controller.dto.ChildRequest;
+import com.example.mamahelper.controller.dto.ChildResponse;
 import com.example.mamahelper.service.ChildService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -19,24 +20,26 @@ public class ChildController {
     }
 
     @PostMapping
-    public Child createChild(@Valid @RequestBody Child child) {
-        return childService.createChild(child);
+    public ChildResponse createChild(@Valid @RequestBody ChildRequest request) {
+        return ChildResponse.from(childService.createChild(request.toEntity()));
     }
 
     @GetMapping
-    public List<Child> getAllChildren() {
-        return childService.getAllChildren();
+    public List<ChildResponse> getAllChildren() {
+        return childService.getAllChildren().stream()
+                .map(ChildResponse::from)
+                .toList();
     }
 
     @GetMapping("/{childId}")
-    public ResponseEntity<Child> getChildById(@PathVariable Long childId) {
-        return ResponseEntity.ok(childService.getChildById(childId));
+    public ResponseEntity<ChildResponse> getChildById(@PathVariable Long childId) {
+        return ResponseEntity.ok(ChildResponse.from(childService.getChildById(childId)));
     }
 
     @PutMapping("/{childId}")
-    public ResponseEntity<Child> updateChild(@PathVariable Long childId,
-                                             @Valid @RequestBody Child updatedChildInfo) {
-        return ResponseEntity.ok(childService.updateChildInfo(childId, updatedChildInfo));
+    public ResponseEntity<ChildResponse> updateChild(@PathVariable Long childId,
+                                                     @Valid @RequestBody ChildRequest request) {
+        return ResponseEntity.ok(ChildResponse.from(childService.updateChildInfo(childId, request.toEntity())));
     }
 
     @DeleteMapping("/{childId}")

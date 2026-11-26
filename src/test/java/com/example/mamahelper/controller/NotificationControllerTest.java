@@ -2,6 +2,7 @@ package com.example.mamahelper.controller;
 
 import com.example.mamahelper.controller.exceptions.ResourceNotFoundException;
 import com.example.mamahelper.entity.Notification;
+import com.example.mamahelper.entity.Reminder;
 import com.example.mamahelper.service.NotificationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,24 @@ class NotificationControllerTest {
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].message").value("Reminder: Bath time is coming up!"))
                 .andExpect(jsonPath("$[1].read").value(true));
+    }
+
+    @Test
+    void shouldReturnOnlyReminderIdAndTitleInsteadOfWholeReminder() throws Exception {
+        Reminder reminder = new Reminder();
+        reminder.setId(7L);
+        reminder.setTitle("Bath time");
+
+        Notification notification = notification(1L, "Reminder: Bath time is coming up!", false);
+        notification.setReminder(reminder);
+
+        when(notificationService.getById(1L)).thenReturn(notification);
+
+        mockMvc.perform(get("/api/notifications/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.reminderId").value(7))
+                .andExpect(jsonPath("$.reminderTitle").value("Bath time"))
+                .andExpect(jsonPath("$.reminder").doesNotExist());
     }
 
     @Test

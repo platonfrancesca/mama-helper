@@ -1,6 +1,7 @@
 package com.example.mamahelper.controller;
 
 import com.example.mamahelper.controller.exceptions.ResourceNotFoundException;
+import com.example.mamahelper.entity.Child;
 import com.example.mamahelper.entity.Reminder;
 import com.example.mamahelper.service.ReminderService;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -34,6 +36,7 @@ class ReminderControllerTest {
         savedReminder.setId(1L);
         savedReminder.setTitle("Bath time");
         savedReminder.setTime(LocalDateTime.of(2026, 12, 1, 19, 0));
+        savedReminder.setChild(new Child(1L, "Maria", LocalDate.of(2026, 1, 1)));
 
         when(reminderService.createReminder(any(Reminder.class), eq(1L)))
                 .thenReturn(savedReminder);
@@ -46,7 +49,11 @@ class ReminderControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.title").value("Bath time"))
-                .andExpect(jsonPath("$.time").value("2026-12-01T19:00:00"));
+                .andExpect(jsonPath("$.time").value("2026-12-01T19:00:00"))
+                .andExpect(jsonPath("$.notificationSent").value(false))
+                // the mobile app reads reminder.child.name, so the nested child must stay
+                .andExpect(jsonPath("$.child.id").value(1))
+                .andExpect(jsonPath("$.child.name").value("Maria"));
     }
 
     @Test
@@ -136,5 +143,41 @@ class ReminderControllerTest {
         mockMvc.perform(delete("/api/reminders/1"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.error").value("The request conflicts with existing data."));
+    }
+
+    @Test
+    void shouldUpdateReminderWhenRequestIsValid() throws Exception {
+        Reminder updatedReminder = new Reminder();
+        updatedReminder.setId(1L);
+        updatedReminder.setTitle("Evening bath");
+        updatedReminder.setTime(LocalDateTime.of(2026, 12, 1, 20, 0));
+        updatedReminder.setChild(new Child(1L, "Maria", LocalDate.of(2026, 1, 1)));
+
+        when(reminderService.updateReminder(eq(1L), any(Reminder.class)))
+                .thenReturn(updatedReminder);
+
+        mockMvc.perform(put("/api/reminders/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title": "Evening bath", "time": "2026-12-01T20:00:00"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Evening bath"))
+                .andExpect(jsonPath("$.time").value("2026-12-01T20:00:00"))
+                .andExpect(jsonPath("$.child.name").value("Maria"));
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenUpdatingReminderWithInvalidData() throws Exception {
+        mockMvc.perform(put("/api/reminders/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title": ""}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("must not be blank"))
+                .andExpect(jsonPath("$.time").value("must not be null"));
+
+        verify(reminderService, never()).updateReminder(any(), any());
     }
 }

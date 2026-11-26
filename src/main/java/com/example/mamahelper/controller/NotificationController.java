@@ -1,6 +1,6 @@
 package com.example.mamahelper.controller;
 
-import com.example.mamahelper.entity.Notification;
+import com.example.mamahelper.controller.dto.NotificationResponse;
 import com.example.mamahelper.service.NotificationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,18 +18,20 @@ public class NotificationController {
     }
 
     @GetMapping
-    public List<Notification> getAllNotifications() {
-        return notificationService.getAllNotifications();
+    public List<NotificationResponse> getAllNotifications() {
+        return notificationService.getAllNotifications().stream()
+                .map(NotificationResponse::from)
+                .toList();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Notification> getNotificationById(@PathVariable Long id) {
-        return ResponseEntity.ok(notificationService.getById(id));
+    public ResponseEntity<NotificationResponse> getNotificationById(@PathVariable Long id) {
+        return ResponseEntity.ok(NotificationResponse.from(notificationService.getById(id)));
     }
 
     @PatchMapping("/{id}/read")
-    public ResponseEntity<Notification> markAsRead(@PathVariable Long id) {
-        return ResponseEntity.ok(notificationService.markAsRead(id));
+    public ResponseEntity<NotificationResponse> markAsRead(@PathVariable Long id) {
+        return ResponseEntity.ok(NotificationResponse.from(notificationService.markAsRead(id)));
     }
 
     @DeleteMapping("/{id}")

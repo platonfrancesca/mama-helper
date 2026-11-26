@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDate;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -42,6 +43,25 @@ class ChildControllerTest {
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.name").value("Maria"))
                 .andExpect(jsonPath("$.dateOfBirth").value("2026-01-01"));
+    }
+
+    @Test
+    void shouldIgnoreIdSentByClientWhenCreatingChild() throws Exception {
+        when(childService.createChild(any(Child.class)))
+                .thenAnswer(invocation -> {
+                    Child child = invocation.getArgument(0);
+                    assertNull(child.getId());
+                    child.setId(1L);
+                    return child;
+                });
+
+        mockMvc.perform(post("/api/child")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"id": 42, "name": "Maria", "dateOfBirth": "2026-01-01"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1));
     }
 
     @Test
