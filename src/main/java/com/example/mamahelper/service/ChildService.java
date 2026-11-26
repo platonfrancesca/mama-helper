@@ -1,5 +1,6 @@
 package com.example.mamahelper.service;
 
+import com.example.mamahelper.controller.exceptions.ResourceNotFoundException;
 import com.example.mamahelper.entity.Child;
 import com.example.mamahelper.repository.ChildRepository;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,6 @@ public class ChildService {
 
                     return childRepository.save(child);
                 })
-                .orElseThrow(() -> new RuntimeException("Child not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Child not found with id: " + id));
     }
 }

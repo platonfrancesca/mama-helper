@@ -36,8 +36,8 @@ public class ChildController {
     }
 
     @PutMapping("/{childId}")
-    public ResponseEntity<Child> updateReminder(@PathVariable Long childId,
-                                                @Valid @RequestBody Child updatedChildInfo) {
+    public ResponseEntity<Child> updateChild(@PathVariable Long childId,
+                                             @Valid @RequestBody Child updatedChildInfo) {
         return ResponseEntity.ok(childService.updateChildInfo(childId, updatedChildInfo));
     }
 }

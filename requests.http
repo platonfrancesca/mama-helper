@@ -17,6 +17,24 @@ Content-Type: application/json
   "dateOfBirth": "2026-01-01"
 }
 
+### Update child by ID
+PUT http://localhost:8080/api/child/1
+Content-Type: application/json
+
+{
+  "name": "Maria Elena",
+  "dateOfBirth": "2026-01-02"
+}
+
+### Update missing child (expect 404)
+PUT http://localhost:8080/api/child/999
+Content-Type: application/json
+
+{
+  "name": "Ana",
+  "dateOfBirth": "2025-05-05"
+}
+
 ### Test invalid child (expect 400 with field errors)
 POST http://localhost:8080/api/child
 Content-Type: application/json
