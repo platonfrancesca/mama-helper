@@ -1,6 +1,7 @@
 package com.example.mamahelper.controller;
 
 import com.example.mamahelper.controller.exceptions.ResourceNotFoundException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -27,6 +28,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest()
                 .body(Map.of("error",
                         "Request body is invalid. Check the JSON format and field types (dates as yyyy-MM-dd, date-times as yyyy-MM-ddTHH:mm:ss)."));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, String>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        return ResponseEntity
+                .status(409)
+                .body(Map.of("error", "The request conflicts with existing data."));
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)

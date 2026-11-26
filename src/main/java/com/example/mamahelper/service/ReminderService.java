@@ -4,8 +4,10 @@ import com.example.mamahelper.controller.exceptions.ResourceNotFoundException;
 import com.example.mamahelper.entity.Child;
 import com.example.mamahelper.entity.Reminder;
 import com.example.mamahelper.repository.ChildRepository;
+import com.example.mamahelper.repository.NotificationRepository;
 import com.example.mamahelper.repository.ReminderRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -14,11 +16,14 @@ public class ReminderService {
 
     private final ReminderRepository reminderRepository;
     private final ChildRepository childRepository;
+    private final NotificationRepository notificationRepository;
 
     public ReminderService(ReminderRepository reminderRepository,
-                           ChildRepository childRepository) {
+                           ChildRepository childRepository,
+                           NotificationRepository notificationRepository) {
         this.reminderRepository = reminderRepository;
         this.childRepository = childRepository;
+        this.notificationRepository = notificationRepository;
     }
 
     public Reminder createReminder(Reminder reminder, Long childId) {
@@ -54,10 +59,13 @@ public class ReminderService {
                 .orElseThrow(() -> new ResourceNotFoundException("Reminder not found with id: " + id));
     }
 
+    @Transactional
     public boolean deleteReminder(Long id) {
         if (!reminderRepository.existsById(id)) {
             return false;
         }
+        // Notifications reference the reminder (foreign key), so they must be deleted first
+        notificationRepository.deleteByReminderId(id);
         reminderRepository.deleteById(id);
         return true;
     }

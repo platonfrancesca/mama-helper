@@ -2,9 +2,11 @@ package com.example.mamahelper.service;
 
 import com.example.mamahelper.controller.exceptions.ResourceNotFoundException;
 import com.example.mamahelper.entity.Reminder;
+import com.example.mamahelper.repository.NotificationRepository;
 import com.example.mamahelper.repository.ReminderRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -20,6 +22,9 @@ class ReminderServiceTest {
 
     @Mock
     private ReminderRepository reminderRepository;
+
+    @Mock
+    private NotificationRepository notificationRepository;
 
     @InjectMocks
     private ReminderService reminderService;
@@ -115,5 +120,31 @@ class ReminderServiceTest {
         reminderService.updateReminder(1L, updatedReminder);
 
         assertTrue(reminder.isNotificationSent());
+    }
+
+    @Test
+    void shouldDeleteNotificationsBeforeDeletingReminder() {
+        Long reminderId = 1L;
+        when(reminderRepository.existsById(reminderId)).thenReturn(true);
+
+        boolean deleted = reminderService.deleteReminder(reminderId);
+
+        assertTrue(deleted);
+
+        InOrder inOrder = inOrder(notificationRepository, reminderRepository);
+        inOrder.verify(notificationRepository).deleteByReminderId(reminderId);
+        inOrder.verify(reminderRepository).deleteById(reminderId);
+    }
+
+    @Test
+    void shouldReturnFalseAndDeleteNothingWhenReminderDoesNotExist() {
+        Long reminderId = 999L;
+        when(reminderRepository.existsById(reminderId)).thenReturn(false);
+
+        boolean deleted = reminderService.deleteReminder(reminderId);
+
+        assertFalse(deleted);
+        verify(notificationRepository, never()).deleteByReminderId(any());
+        verify(reminderRepository, never()).deleteById(any());
     }
 }

@@ -7,6 +7,7 @@ import com.example.mamahelper.repository.ChildRepository;
 import com.example.mamahelper.repository.NotificationRepository;
 import com.example.mamahelper.repository.ReminderRepository;
 import com.example.mamahelper.service.NotificationService;
+import com.example.mamahelper.service.ReminderService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,6 +23,9 @@ class MamaHelperIntegrationTest {
 
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private ReminderService reminderService;
 
     @Autowired
     private NotificationRepository notificationRepository;
@@ -78,6 +82,28 @@ class MamaHelperIntegrationTest {
                 .orElseThrow();
 
         assertTrue(updatedNotification.isRead());
+    }
+
+    @Test
+    void shouldDeleteReminderThatHasNotifications() {
+        Child child = new Child();
+        child.setName("Child 4");
+        child.setDateOfBirth(LocalDate.of(2023, 4, 4));
+        Child savedChild = childRepository.save(child);
+
+        Reminder reminder = new Reminder();
+        reminder.setTitle("Vitamins");
+        reminder.setTime(LocalDateTime.now().plusMinutes(5));
+        reminder.setChild(savedChild);
+        Reminder savedReminder = reminderRepository.save(reminder);
+
+        Notification notification = notificationService.createNotification(savedReminder);
+
+        boolean deleted = reminderService.deleteReminder(savedReminder.getId());
+
+        assertTrue(deleted);
+        assertFalse(reminderRepository.existsById(savedReminder.getId()));
+        assertFalse(notificationRepository.existsById(notification.getId()));
     }
 
     @Test
