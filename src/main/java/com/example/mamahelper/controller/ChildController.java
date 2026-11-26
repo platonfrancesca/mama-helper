@@ -38,4 +38,11 @@ public class ChildController {
                                              @Valid @RequestBody Child updatedChildInfo) {
         return ResponseEntity.ok(childService.updateChildInfo(childId, updatedChildInfo));
     }
+
+    @DeleteMapping("/{childId}")
+    public ResponseEntity<Void> deleteChild(@PathVariable Long childId) {
+        childService.deleteChild(childId);
+
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -6,6 +6,7 @@ import com.example.mamahelper.entity.Reminder;
 import com.example.mamahelper.repository.ChildRepository;
 import com.example.mamahelper.repository.NotificationRepository;
 import com.example.mamahelper.repository.ReminderRepository;
+import com.example.mamahelper.service.ChildService;
 import com.example.mamahelper.service.NotificationService;
 import com.example.mamahelper.service.ReminderService;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,9 @@ class MamaHelperIntegrationTest {
 
     @Autowired
     private ReminderService reminderService;
+
+    @Autowired
+    private ChildService childService;
 
     @Autowired
     private NotificationRepository notificationRepository;
@@ -124,5 +128,34 @@ class MamaHelperIntegrationTest {
         List<Notification> notifications = notificationService.getAllNotifications();
 
         assertFalse(notifications.isEmpty());
+    }
+
+    @Test
+    void shouldDeleteChildWithAllRemindersAndNotifications() {
+        Child child = new Child();
+        child.setName("Child 5");
+        child.setDateOfBirth(LocalDate.of(2023, 5, 5));
+        Child savedChild = childRepository.save(child);
+
+        Reminder firstReminder = new Reminder();
+        firstReminder.setTitle("Bath Time");
+        firstReminder.setTime(LocalDateTime.now().plusMinutes(5));
+        firstReminder.setChild(savedChild);
+        Reminder savedFirstReminder = reminderRepository.save(firstReminder);
+
+        Reminder secondReminder = new Reminder();
+        secondReminder.setTitle("Doctor");
+        secondReminder.setTime(LocalDateTime.now().plusDays(2));
+        secondReminder.setChild(savedChild);
+        Reminder savedSecondReminder = reminderRepository.save(secondReminder);
+
+        Notification notification = notificationService.createNotification(savedFirstReminder);
+
+        childService.deleteChild(savedChild.getId());
+
+        assertFalse(childRepository.existsById(savedChild.getId()));
+        assertFalse(reminderRepository.existsById(savedFirstReminder.getId()));
+        assertFalse(reminderRepository.existsById(savedSecondReminder.getId()));
+        assertFalse(notificationRepository.existsById(notification.getId()));
     }
 }

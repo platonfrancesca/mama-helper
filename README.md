@@ -78,6 +78,7 @@ You can run them directly from IntelliJ IDEA or VS Code (with the REST Client ex
 | `GET` | `/api/child` | List all children |
 | `GET` | `/api/child/{id}` | Get a child by id |
 | `PUT` | `/api/child/{id}` | Update a child |
+| `DELETE` | `/api/child/{id}` | Delete a child, with all its reminders and notifications |
 
 ```json
 { "name": "Maria", "dateOfBirth": "2026-01-01" }

@@ -7,4 +7,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     // Derived query: Spring builds "delete notifications where reminder.id = ?" from the method name
     void deleteByReminderId(Long reminderId);
+
+    // Property path reminder.child.id: deletes all notifications of all reminders of a child
+    void deleteByReminderChildId(Long childId);
 }

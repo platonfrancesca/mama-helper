@@ -143,4 +143,22 @@ class ChildControllerTest {
 
         verify(childService, never()).updateChildInfo(any(), any());
     }
+
+    @Test
+    void shouldReturnNoContentWhenChildIsDeleted() throws Exception {
+        mockMvc.perform(delete("/api/child/1"))
+                .andExpect(status().isNoContent());
+
+        verify(childService).deleteChild(1L);
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenDeletingMissingChild() throws Exception {
+        doThrow(new ResourceNotFoundException("Child not found with id: 999"))
+                .when(childService).deleteChild(999L);
+
+        mockMvc.perform(delete("/api/child/999"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Child not found with id: 999"));
+    }
 }

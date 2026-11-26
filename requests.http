@@ -35,6 +35,9 @@ Content-Type: application/json
   "dateOfBirth": "2025-05-05"
 }
 
+### Delete child by ID (also deletes its reminders and notifications)
+DELETE http://localhost:8080/api/child/1
+
 ### Test invalid child (expect 400 with field errors)
 POST http://localhost:8080/api/child
 Content-Type: application/json

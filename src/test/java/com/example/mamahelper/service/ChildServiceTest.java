@@ -3,8 +3,11 @@ package com.example.mamahelper.service;
 import com.example.mamahelper.controller.exceptions.ResourceNotFoundException;
 import com.example.mamahelper.entity.Child;
 import com.example.mamahelper.repository.ChildRepository;
+import com.example.mamahelper.repository.NotificationRepository;
+import com.example.mamahelper.repository.ReminderRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
@@ -20,6 +23,12 @@ class ChildServiceTest {
 
     @Mock
     private ChildRepository childRepository;
+
+    @Mock
+    private ReminderRepository reminderRepository;
+
+    @Mock
+    private NotificationRepository notificationRepository;
 
     @InjectMocks
     private ChildService childService;
@@ -85,5 +94,30 @@ class ChildServiceTest {
 
         verify(childRepository).findById(childId);
         verify(childRepository, never()).save(any(Child.class));
+    }
+
+    @Test
+    void shouldDeleteNotificationsAndRemindersBeforeDeletingChild() {
+        Long childId = 1L;
+        when(childRepository.existsById(childId)).thenReturn(true);
+
+        childService.deleteChild(childId);
+
+        InOrder inOrder = inOrder(notificationRepository, reminderRepository, childRepository);
+        inOrder.verify(notificationRepository).deleteByReminderChildId(childId);
+        inOrder.verify(reminderRepository).deleteByChildId(childId);
+        inOrder.verify(childRepository).deleteById(childId);
+    }
+
+    @Test
+    void shouldThrowResourceNotFoundExceptionAndDeleteNothingWhenDeletingMissingChild() {
+        Long childId = 999L;
+        when(childRepository.existsById(childId)).thenReturn(false);
+
+        assertThrows(ResourceNotFoundException.class, () -> childService.deleteChild(childId));
+
+        verify(notificationRepository, never()).deleteByReminderChildId(any());
+        verify(reminderRepository, never()).deleteByChildId(any());
+        verify(childRepository, never()).deleteById(any());
     }
 }
