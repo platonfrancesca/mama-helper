@@ -5,7 +5,7 @@ The mobile frontend lives in a separate repo: https://github.com/platonfrancesca
 
 ## Stack
 - Java 21, Spring Boot 4.1 (Web MVC, Data JPA, Validation), Lombok
-- H2 in-memory database (`ddl-auto=create`: data is reset on every restart)
+- H2 database stored in `./data/` (`ddl-auto=update`, git-ignored); tests use a separate in-memory database (`src/test/resources/application.properties`)
 - JUnit 6 + Mockito for tests
 
 ## Running and testing

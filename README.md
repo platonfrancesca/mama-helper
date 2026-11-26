@@ -14,7 +14,7 @@ The mobile app (React Native + Expo) lives here: [mama-helper-app](https://githu
   - Spring Data JPA (Hibernate) – database access
   - Bean Validation – request validation
   - Spring Scheduling – periodic reminder checks
-- **H2** in-memory database
+- **H2** database, stored in a local file
 - **Lombok** – less boilerplate
 - **JUnit 6** and **Mockito** – unit and integration tests
 
@@ -55,9 +55,9 @@ If a reminder's time is changed, the flag is reset so the reminder will be notif
 ```
 The API runs on http://localhost:8080.
 
-The H2 console is available at http://localhost:8080/h2-console (JDBC URL: `jdbc:h2:mem:mamahelper`, user `sa`, no password).
+The H2 console is available at http://localhost:8080/h2-console (JDBC URL: `jdbc:h2:file:./data/mamahelper`, user `sa`, no password).
 
-> The database is in-memory, so data is reset on every restart.
+> Data is stored in the `data/` folder and survives restarts. Delete that folder to start with an empty database. Tests use a separate in-memory database, so they never touch your data.
 
 ### Run the tests
 ```bash
@@ -120,7 +120,6 @@ All errors use the standard [ProblemDetail](https://www.rfc-editor.org/rfc/rfc94
 
 ```json
 {
-  "type": "about:blank",
   "title": "Validation failed",
   "status": 400,
   "detail": "One or more fields are invalid.",
@@ -139,6 +138,4 @@ All errors use the standard [ProblemDetail](https://www.rfc-editor.org/rfc/rfc94
 
 ## Roadmap
 
-- Controller tests with `MockMvc`
-- Persistent database
 - Continuous integration with GitHub Actions
