@@ -27,7 +27,7 @@ class MamaHelperIntegrationTest {
     private NotificationRepository notificationRepository;
 
     @Autowired
-    private ReminderRepository Repository;
+    private ReminderRepository reminderRepository;
 
     @Autowired
     private ChildRepository childRepository;
@@ -43,7 +43,7 @@ class MamaHelperIntegrationTest {
         reminder.setTitle("Bath Time");
         reminder.setTime(LocalDateTime.now().plusHours(2));
         reminder.setChild(savedChild);
-        Reminder savedReminder = Repository.save(reminder);
+        Reminder savedReminder = reminderRepository.save(reminder);
 
         notificationService.createNotification(reminder);
 
@@ -68,7 +68,7 @@ class MamaHelperIntegrationTest {
         reminder.setTitle("Doctor Appointment");
         reminder.setTime(LocalDateTime.now().plusHours(1));
         reminder.setChild(savedChild);
-        Reminder savedReminder = Repository.save(reminder);
+        Reminder savedReminder = reminderRepository.save(reminder);
 
         Notification notification = notificationService.createNotification(savedReminder);
 
@@ -91,7 +91,7 @@ class MamaHelperIntegrationTest {
         reminder.setTitle("Feeding Time");
         reminder.setTime(LocalDateTime.now().plusDays(1));
         reminder.setChild(savedChild);
-        Reminder savedReminder = Repository.save(reminder);
+        Reminder savedReminder = reminderRepository.save(reminder);
 
         notificationService.createNotification(savedReminder);
 

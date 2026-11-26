@@ -1,5 +1,6 @@
 package com.example.mamahelper.service;
 
+import com.example.mamahelper.controller.exceptions.ResourceNotFoundException;
 import com.example.mamahelper.entity.Reminder;
 import com.example.mamahelper.repository.ReminderRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -83,8 +84,8 @@ class ReminderServiceTest {
         when(reminderRepository.findById(reminderId))
                 .thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> reminderService.updateReminder(reminderId, any(Reminder.class)));
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
+                () -> reminderService.updateReminder(reminderId, new Reminder()));
 
         assertEquals("Reminder not found with id: " + reminderId, exception.getMessage());
 
