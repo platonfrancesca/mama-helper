@@ -60,13 +60,12 @@ public class ReminderService {
     }
 
     @Transactional
-    public boolean deleteReminder(Long id) {
+    public void deleteReminder(Long id) {
         if (!reminderRepository.existsById(id)) {
-            return false;
+            throw new ResourceNotFoundException("Reminder not found with id: " + id);
         }
         // Notifications reference the reminder (foreign key), so they must be deleted first
         notificationRepository.deleteByReminderId(id);
         reminderRepository.deleteById(id);
-        return true;
     }
 }

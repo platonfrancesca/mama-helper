@@ -116,16 +116,29 @@ Notifications are created automatically by the scheduler.
 
 ### Error responses
 
-| Status | When | Example body |
+All errors use the standard [ProblemDetail](https://www.rfc-editor.org/rfc/rfc9457) format (`application/problem+json`):
+
+```json
+{
+  "type": "about:blank",
+  "title": "Validation failed",
+  "status": 400,
+  "detail": "One or more fields are invalid.",
+  "instance": "/api/reminders",
+  "errors": { "title": "must not be blank", "childId": "must not be null" }
+}
+```
+
+| Status | When | `title` |
 |---|---|---|
-| `400` | A field fails validation | `{"title": "must not be blank"}` |
-| `400` | The JSON is malformed or a field has the wrong type | `{"error": "Request body is invalid. …"}` |
-| `404` | The resource does not exist | `Child not found with id: 999` |
+| `400` | A field fails validation (details in `errors`) | `Validation failed` |
+| `400` | The JSON is malformed or a field has the wrong type | `Malformed request` |
+| `404` | The resource or URL does not exist | `Resource not found` |
+| `409` | The request conflicts with existing data | `Conflict` |
+| `500` | Unexpected server error (no internal details are exposed) | `Internal server error` |
 
 ## Roadmap
 
 - Controller tests with `MockMvc`
-- Consistent error format (`ProblemDetail`)
-- Response DTOs instead of returning entities
 - Persistent database
 - Continuous integration with GitHub Actions

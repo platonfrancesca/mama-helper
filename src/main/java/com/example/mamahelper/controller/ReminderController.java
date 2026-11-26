@@ -51,8 +51,8 @@ public class ReminderController {
 
     @DeleteMapping("/{reminderId}")
     public ResponseEntity<Void> deleteReminder(@PathVariable Long reminderId) {
-        return reminderService.deleteReminder(reminderId)
-                ? ResponseEntity.noContent().build()
-                : ResponseEntity.notFound().build();
+        reminderService.deleteReminder(reminderId);
+
+        return ResponseEntity.noContent().build();
     }
 }

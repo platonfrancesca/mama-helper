@@ -74,7 +74,7 @@ class NotificationControllerTest {
 
         mockMvc.perform(get("/api/notifications/999"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Notification not found with id 999"));
+                .andExpect(jsonPath("$.detail").value("Notification not found with id 999"));
     }
 
     @Test

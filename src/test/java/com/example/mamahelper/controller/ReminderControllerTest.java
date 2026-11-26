@@ -64,7 +64,7 @@ class ReminderControllerTest {
                                 {"title": "", "time": "2026-12-01T19:00:00", "childId": 1}
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.title").value("must not be blank"));
+                .andExpect(jsonPath("$.errors.title").value("must not be blank"));
 
         verify(reminderService, never()).createReminder(any(), any());
     }
@@ -77,7 +77,7 @@ class ReminderControllerTest {
                                 {"title": "Bath time", "time": "2026-12-01T19:00:00"}
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.childId").value("must not be null"));
+                .andExpect(jsonPath("$.errors.childId").value("must not be null"));
 
         verify(reminderService, never()).createReminder(any(), any());
     }
@@ -90,7 +90,7 @@ class ReminderControllerTest {
                                 {"title": "Bath time", "time": "tomorrow", "childId": 1}
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").exists());
+                .andExpect(jsonPath("$.title").value("Malformed request"));
 
         verify(reminderService, never()).createReminder(any(), any());
     }
@@ -106,7 +106,7 @@ class ReminderControllerTest {
                                 {"title": "Bath time", "time": "2026-12-01T19:00:00", "childId": 999}
                                 """))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Child not found with id: 999"));
+                .andExpect(jsonPath("$.detail").value("Child not found with id: 999"));
     }
 
     @Test
@@ -116,33 +116,35 @@ class ReminderControllerTest {
 
         mockMvc.perform(get("/api/reminders/999"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Reminder not found with id: 999"));
+                .andExpect(jsonPath("$.detail").value("Reminder not found with id: 999"));
     }
 
     @Test
     void shouldReturnNoContentWhenReminderIsDeleted() throws Exception {
-        when(reminderService.deleteReminder(1L)).thenReturn(true);
-
         mockMvc.perform(delete("/api/reminders/1"))
                 .andExpect(status().isNoContent());
+
+        verify(reminderService).deleteReminder(1L);
     }
 
     @Test
     void shouldReturnNotFoundWhenDeletingMissingReminder() throws Exception {
-        when(reminderService.deleteReminder(999L)).thenReturn(false);
+        doThrow(new ResourceNotFoundException("Reminder not found with id: 999"))
+                .when(reminderService).deleteReminder(999L);
 
         mockMvc.perform(delete("/api/reminders/999"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail").value("Reminder not found with id: 999"));
     }
 
     @Test
     void shouldReturnConflictWhenDatabaseConstraintIsViolated() throws Exception {
-        when(reminderService.deleteReminder(anyLong()))
-                .thenThrow(new DataIntegrityViolationException("FK constraint violated"));
+        doThrow(new DataIntegrityViolationException("FK constraint violated"))
+                .when(reminderService).deleteReminder(anyLong());
 
         mockMvc.perform(delete("/api/reminders/1"))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("The request conflicts with existing data."));
+                .andExpect(jsonPath("$.detail").value("The request conflicts with existing data."));
     }
 
     @Test
@@ -175,9 +177,52 @@ class ReminderControllerTest {
                                 {"title": ""}
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.title").value("must not be blank"))
-                .andExpect(jsonPath("$.time").value("must not be null"));
+                .andExpect(jsonPath("$.errors.title").value("must not be blank"))
+                .andExpect(jsonPath("$.errors.time").value("must not be null"));
 
         verify(reminderService, never()).updateReminder(any(), any());
+    }
+
+    @Test
+    void shouldReturnProblemDetailWithAllFieldsForValidationErrors() throws Exception {
+        mockMvc.perform(post("/api/reminders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title": ""}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.title").value("Validation failed"))
+                .andExpect(jsonPath("$.instance").value("/api/reminders"))
+                .andExpect(jsonPath("$.errors.title").value("must not be blank"))
+                .andExpect(jsonPath("$.errors.time").value("must not be null"))
+                .andExpect(jsonPath("$.errors.childId").value("must not be null"));
+    }
+
+    @Test
+    void shouldNotLeakInternalDetailsOnUnexpectedError() throws Exception {
+        when(reminderService.getAllReminders())
+                .thenThrow(new RuntimeException("secret SQL: select * from reminder"));
+
+        mockMvc.perform(get("/api/reminders"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.detail").value("An unexpected error occurred."))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("secret"))));
+    }
+
+    @Test
+    void shouldReturnNotFoundForUnknownUrl() throws Exception {
+        mockMvc.perform(get("/api/reminders/1/unknown"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404));
+    }
+
+    @Test
+    void shouldReturnMethodNotAllowedForWrongHttpMethod() throws Exception {
+        mockMvc.perform(patch("/api/reminders"))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(jsonPath("$.status").value(405));
     }
 }

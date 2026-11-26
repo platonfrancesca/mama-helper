@@ -103,9 +103,7 @@ class MamaHelperIntegrationTest {
 
         Notification notification = notificationService.createNotification(savedReminder);
 
-        boolean deleted = reminderService.deleteReminder(savedReminder.getId());
-
-        assertTrue(deleted);
+        reminderService.deleteReminder(savedReminder.getId());
         assertFalse(reminderRepository.existsById(savedReminder.getId()));
         assertFalse(notificationRepository.existsById(notification.getId()));
     }

@@ -72,8 +72,8 @@ class ChildControllerTest {
                                 {"name": " "}
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.name").value("must not be blank"))
-                .andExpect(jsonPath("$.dateOfBirth").value("must not be null"));
+                .andExpect(jsonPath("$.errors.name").value("must not be blank"))
+                .andExpect(jsonPath("$.errors.dateOfBirth").value("must not be null"));
 
         verify(childService, never()).createChild(any());
     }
@@ -84,7 +84,7 @@ class ChildControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").exists());
+                .andExpect(jsonPath("$.title").value("Malformed request"));
 
         verify(childService, never()).createChild(any());
     }
@@ -119,7 +119,7 @@ class ChildControllerTest {
 
         mockMvc.perform(get("/api/child/999"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Child not found with id: 999"));
+                .andExpect(jsonPath("$.detail").value("Child not found with id: 999"));
     }
 
     @Test
@@ -148,7 +148,7 @@ class ChildControllerTest {
                                 {"name": "Ana", "dateOfBirth": "2025-05-05"}
                                 """))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Child not found with id: 999"));
+                .andExpect(jsonPath("$.detail").value("Child not found with id: 999"));
     }
 
     @Test
@@ -159,7 +159,7 @@ class ChildControllerTest {
                                 {"name": "", "dateOfBirth": "2026-01-02"}
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.name").value("must not be blank"));
+                .andExpect(jsonPath("$.errors.name").value("must not be blank"));
 
         verify(childService, never()).updateChildInfo(any(), any());
     }
@@ -179,6 +179,6 @@ class ChildControllerTest {
 
         mockMvc.perform(delete("/api/child/999"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Child not found with id: 999"));
+                .andExpect(jsonPath("$.detail").value("Child not found with id: 999"));
     }
 }

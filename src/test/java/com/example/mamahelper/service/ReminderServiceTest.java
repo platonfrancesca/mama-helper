@@ -127,9 +127,7 @@ class ReminderServiceTest {
         Long reminderId = 1L;
         when(reminderRepository.existsById(reminderId)).thenReturn(true);
 
-        boolean deleted = reminderService.deleteReminder(reminderId);
-
-        assertTrue(deleted);
+        reminderService.deleteReminder(reminderId);
 
         InOrder inOrder = inOrder(notificationRepository, reminderRepository);
         inOrder.verify(notificationRepository).deleteByReminderId(reminderId);
@@ -137,13 +135,12 @@ class ReminderServiceTest {
     }
 
     @Test
-    void shouldReturnFalseAndDeleteNothingWhenReminderDoesNotExist() {
+    void shouldThrowResourceNotFoundExceptionAndDeleteNothingWhenReminderDoesNotExist() {
         Long reminderId = 999L;
         when(reminderRepository.existsById(reminderId)).thenReturn(false);
 
-        boolean deleted = reminderService.deleteReminder(reminderId);
+        assertThrows(ResourceNotFoundException.class, () -> reminderService.deleteReminder(reminderId));
 
-        assertFalse(deleted);
         verify(notificationRepository, never()).deleteByReminderId(any());
         verify(reminderRepository, never()).deleteById(any());
     }
