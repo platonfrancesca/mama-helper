@@ -17,6 +17,15 @@ Content-Type: application/json
   "dateOfBirth": "2026-01-01"
 }
 
+### Test invalid child (expect 400 with field errors)
+POST http://localhost:8080/api/child
+Content-Type: application/json
+
+{
+  "name": "",
+  "dateOfBirth": "2026-01-01"
+}
+
 ### Create reminder for a child
 POST http://localhost:8080/api/reminders
 Content-Type: application/json
