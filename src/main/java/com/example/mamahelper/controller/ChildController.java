@@ -30,9 +30,7 @@ public class ChildController {
 
     @GetMapping("/{childId}")
     public ResponseEntity<Child> getChildById(@PathVariable Long childId) {
-        return childService.getChildById(childId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(childService.getChildById(childId));
     }
 
     @PutMapping("/{childId}")

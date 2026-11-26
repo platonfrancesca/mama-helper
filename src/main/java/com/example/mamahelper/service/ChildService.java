@@ -6,7 +6,6 @@ import com.example.mamahelper.repository.ChildRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ChildService {
@@ -25,8 +24,9 @@ public class ChildService {
         return childRepository.findAll();
     }
 
-    public Optional<Child> getChildById(Long id) {
-        return childRepository.findById(id);
+    public Child getChildById(Long id) {
+        return childRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Child not found with id: " + id));
     }
 
     public Child updateChildInfo(Long id, Child updatedChildInfo) {

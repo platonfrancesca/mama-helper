@@ -12,7 +12,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -86,7 +85,7 @@ class ChildControllerTest {
     @Test
     void shouldReturnChildById() throws Exception {
         when(childService.getChildById(1L))
-                .thenReturn(Optional.of(new Child(1L, "Maria", LocalDate.of(2026, 1, 1))));
+                .thenReturn(new Child(1L, "Maria", LocalDate.of(2026, 1, 1)));
 
         mockMvc.perform(get("/api/child/1"))
                 .andExpect(status().isOk())
@@ -95,10 +94,12 @@ class ChildControllerTest {
 
     @Test
     void shouldReturnNotFoundWhenChildDoesNotExist() throws Exception {
-        when(childService.getChildById(999L)).thenReturn(Optional.empty());
+        when(childService.getChildById(999L))
+                .thenThrow(new ResourceNotFoundException("Child not found with id: 999"));
 
         mockMvc.perform(get("/api/child/999"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Child not found with id: 999"));
     }
 
     @Test
