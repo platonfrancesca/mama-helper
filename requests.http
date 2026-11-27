@@ -78,6 +78,65 @@ Content-Type: application/json
   "childId": 1
 }
 
+### Create daily reminder (vitamins every day at 8:00, no end date)
+POST http://localhost:8080/api/reminders
+Content-Type: application/json
+
+{
+  "title": "Vitamins",
+  "time": "2026-12-01T08:00:00",
+  "childId": 1,
+  "repeat": "DAILY"
+}
+
+### Create weekly reminder (bath on Monday and Thursday until 31 March; time moves to the first chosen day)
+POST http://localhost:8080/api/reminders
+Content-Type: application/json
+
+{
+  "title": "Bath time",
+  "time": "2026-12-01T19:00:00",
+  "childId": 1,
+  "repeat": "WEEKLY",
+  "days": ["MONDAY", "THURSDAY"],
+  "endDate": "2027-03-31"
+}
+
+### Test weekly reminder without days (expect 400)
+POST http://localhost:8080/api/reminders
+Content-Type: application/json
+
+{
+  "title": "Bath time",
+  "time": "2026-12-01T19:00:00",
+  "childId": 1,
+  "repeat": "WEEKLY"
+}
+
+### Test daily reminder with days (expect 400)
+POST http://localhost:8080/api/reminders
+Content-Type: application/json
+
+{
+  "title": "Vitamins",
+  "time": "2026-12-01T08:00:00",
+  "childId": 1,
+  "repeat": "DAILY",
+  "days": ["MONDAY"]
+}
+
+### Test end date before the first occurrence (expect 400)
+POST http://localhost:8080/api/reminders
+Content-Type: application/json
+
+{
+  "title": "Medicine",
+  "time": "2026-12-01T08:00:00",
+  "childId": 1,
+  "repeat": "DAILY",
+  "endDate": "2026-11-30"
+}
+
 ### Get all reminders
 GET http://localhost:8080/api/reminders
 

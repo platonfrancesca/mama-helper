@@ -3,7 +3,6 @@ package com.example.mamahelper.controller;
 import com.example.mamahelper.controller.dto.CreateReminderRequest;
 import com.example.mamahelper.controller.dto.ReminderResponse;
 import com.example.mamahelper.controller.dto.UpdateReminderRequest;
-import com.example.mamahelper.entity.Reminder;
 import com.example.mamahelper.service.ReminderService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -23,12 +22,7 @@ public class ReminderController {
 
     @PostMapping
     public ReminderResponse createReminder(@Valid @RequestBody CreateReminderRequest request) {
-        Reminder reminder = new Reminder();
-        reminder.setTitle(request.getTitle());
-        reminder.setDescription(request.getDescription());
-        reminder.setTime(request.getTime());
-
-        return ReminderResponse.from(reminderService.createReminder(reminder, request.getChildId()));
+        return ReminderResponse.from(reminderService.createReminder(request.toEntity(), request.getChildId()));
     }
 
     @GetMapping

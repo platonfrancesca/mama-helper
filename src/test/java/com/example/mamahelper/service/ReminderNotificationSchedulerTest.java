@@ -1,6 +1,7 @@
 package com.example.mamahelper.service;
 
 import com.example.mamahelper.entity.Reminder;
+import com.example.mamahelper.entity.RepeatPattern;
 import com.example.mamahelper.repository.ReminderRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -105,6 +106,69 @@ class ReminderNotificationSchedulerTest {
 
         verify(reminderRepository, times(1)).save(reminder);
         verify(notificationService, times(1)).createNotification(reminder);
+    }
+
+    @Test
+    void shouldMoveDailyReminderToTomorrowAfterNotifying() {
+        LocalDateTime dueTime = now.plusMinutes(10);
+        Reminder vitamins = reminder(1L, "Vitamins", dueTime);
+        vitamins.setRepeat(RepeatPattern.DAILY);
+        whenDueRemindersAre(List.of(vitamins));
+
+        reminderNotificationScheduler.checkReminders();
+
+        verify(notificationService).createNotification(vitamins);
+        assertEquals(dueTime.plusDays(1), vitamins.getTime());
+        assertFalse(vitamins.isNotificationSent());
+        verify(reminderRepository).save(vitamins);
+    }
+
+    @Test
+    void shouldFinishRepeatingReminderAfterItsLastOccurrence() {
+        LocalDateTime dueTime = now.plusMinutes(10);
+        Reminder medicine = reminder(1L, "Medicine", dueTime);
+        medicine.setRepeat(RepeatPattern.DAILY);
+        medicine.setEndDate(dueTime.toLocalDate());
+        whenDueRemindersAre(List.of(medicine));
+
+        reminderNotificationScheduler.checkReminders();
+
+        assertEquals(dueTime, medicine.getTime());
+        assertTrue(medicine.isNotificationSent());
+    }
+
+    @Test
+    void shouldSkipMissedOccurrenceWithoutNotifying() {
+        // The server was down: the 8:00 occurrence passed two hours ago
+        LocalDateTime missedTime = now.minusHours(2);
+        Reminder vitamins = reminder(1L, "Vitamins", missedTime);
+        vitamins.setRepeat(RepeatPattern.DAILY);
+        when(reminderRepository.findByNotificationSentFalseAndRepeatNotAndTimeLessThanEqual(RepeatPattern.NONE, now))
+                .thenReturn(List.of(vitamins));
+        whenDueRemindersAre(List.of());
+
+        reminderNotificationScheduler.checkReminders();
+
+        verify(notificationService, never()).createNotification(any());
+        assertEquals(missedTime.plusDays(1), vitamins.getTime());
+        assertFalse(vitamins.isNotificationSent());
+        verify(reminderRepository).save(vitamins);
+    }
+
+    @Test
+    void shouldFinishMissedReminderWhenItHasNoNextOccurrence() {
+        LocalDateTime missedTime = now.minusHours(2);
+        Reminder medicine = reminder(1L, "Medicine", missedTime);
+        medicine.setRepeat(RepeatPattern.DAILY);
+        medicine.setEndDate(missedTime.toLocalDate());
+        when(reminderRepository.findByNotificationSentFalseAndRepeatNotAndTimeLessThanEqual(RepeatPattern.NONE, now))
+                .thenReturn(List.of(medicine));
+        whenDueRemindersAre(List.of());
+
+        reminderNotificationScheduler.checkReminders();
+
+        verify(notificationService, never()).createNotification(any());
+        assertTrue(medicine.isNotificationSent());
     }
 
     private void whenDueRemindersAre(List<Reminder> reminders) {

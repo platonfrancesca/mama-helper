@@ -2,6 +2,7 @@ package com.example.mamahelper.repository;
 
 import com.example.mamahelper.entity.Child;
 import com.example.mamahelper.entity.Reminder;
+import com.example.mamahelper.entity.RepeatPattern;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,6 +73,24 @@ class ReminderRepositoryTest {
         save("Already notified", NOW.plusMinutes(5), true);
 
         assertTrue(findDueIds().isEmpty());
+    }
+
+    @Test
+    void shouldFindMissedRepeatingReminderButNotMissedOneTimeReminder() {
+        Reminder missedDaily = save("Vitamins, missed", NOW.minusHours(2), false);
+        missedDaily.setRepeat(RepeatPattern.DAILY);
+        save("One-time, passed", NOW.minusHours(2), false);
+        Reminder futureDaily = save("Vitamins, later", NOW.plusHours(2), false);
+        futureDaily.setRepeat(RepeatPattern.DAILY);
+        reminderRepository.flush();
+
+        List<Long> missedIds = reminderRepository
+                .findByNotificationSentFalseAndRepeatNotAndTimeLessThanEqual(RepeatPattern.NONE, NOW)
+                .stream()
+                .map(Reminder::getId)
+                .toList();
+
+        assertEquals(List.of(missedDaily.getId()), missedIds);
     }
 
     private List<Long> findDueIds() {

@@ -9,7 +9,9 @@ import com.example.mamahelper.repository.ReminderRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class ReminderService {
@@ -30,6 +32,7 @@ public class ReminderService {
         Child child = childRepository.findById(childId)
                 .orElseThrow(() -> new ResourceNotFoundException("Child not found with id: " + childId));
         reminder.setChild(child);
+        moveToFirstOccurrence(reminder);
 
         return reminderRepository.save(reminder);
     }
@@ -49,14 +52,33 @@ public class ReminderService {
                     reminder.setTitle(updatedReminder.getTitle());
                     reminder.setDescription(updatedReminder.getDescription());
 
-                    if (!reminder.getTime().equals(updatedReminder.getTime())) {
+                    // An edit always applies to the whole series (see ADR 0001)
+                    boolean scheduleChanged = !reminder.getTime().equals(updatedReminder.getTime())
+                            || reminder.getRepeat() != updatedReminder.getRepeat()
+                            || !Objects.equals(reminder.getDays(), updatedReminder.getDays())
+                            || !Objects.equals(reminder.getEndDate(), updatedReminder.getEndDate());
+
+                    if (scheduleChanged) {
+                        reminder.setTime(updatedReminder.getTime());
+                        reminder.setRepeat(updatedReminder.getRepeat());
+                        reminder.setDays(new HashSet<>(updatedReminder.getDays()));
+                        reminder.setEndDate(updatedReminder.getEndDate());
                         reminder.setNotificationSent(false);
+                        moveToFirstOccurrence(reminder);
                     }
 
-                    reminder.setTime(updatedReminder.getTime());
                     return reminderRepository.save(reminder);
                 })
                 .orElseThrow(() -> new ResourceNotFoundException("Reminder not found with id: " + id));
+    }
+
+    /**
+     * A weekly reminder must land on one of its chosen days: Tuesday 19:00 with days [THURSDAY]
+     * becomes Thursday 19:00. A past time is fine: the scheduler skips missed occurrences.
+     */
+    private void moveToFirstOccurrence(Reminder reminder) {
+        NextOccurrenceCalculator.firstOccurrenceFrom(reminder, reminder.getTime())
+                .ifPresent(reminder::setTime);
     }
 
     @Transactional

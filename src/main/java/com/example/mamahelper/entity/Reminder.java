@@ -8,7 +8,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -35,6 +39,16 @@ public class Reminder {
     @ManyToOne
     @JoinColumn(name = "child_id", nullable = false)
     private Child child;
+
+    @Enumerated(EnumType.STRING)
+    private RepeatPattern repeat = RepeatPattern.NONE;
+
+    // EAGER: the scheduler reads the days outside a web request, where lazy loading would fail
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Enumerated(EnumType.STRING)
+    private Set<DayOfWeek> days = new HashSet<>();
+
+    private LocalDate endDate;
 
     public boolean isNotificationSent() {
         return notificationSent;

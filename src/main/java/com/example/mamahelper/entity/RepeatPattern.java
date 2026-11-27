@@ -1,2 +1,8 @@
-package com.example.mamahelper.entity;public enum RepeatPattern {
+package com.example.mamahelper.entity;
+
+public enum RepeatPattern {
+
+    NONE,
+    DAILY,
+    WEEKLY
 }
