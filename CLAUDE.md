@@ -34,3 +34,17 @@ I use this project to remember programming after maternity leave, especially Jav
 ## Commit messages
 Past-tense sentences describing what changed, e.g.
 "Fixed validation error handling so invalid requests return 400 instead of 500. Added test request to requests.http."
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in GitHub Issues for platonfrancesca/mama-helper, using the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Uses the five default triage labels (needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
